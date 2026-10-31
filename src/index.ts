@@ -1,10 +1,11 @@
 import { Server } from "colyseus";
 import { WebSocketTransport } from "@colyseus/ws-transport";
+import { env } from "./config/env";
 import { setupDashboard } from "./dashboard";
 import { LudoRoom } from "./rooms/LudoRoom";
 import { recordServerLog } from "./serverLog";
 
-const port = Number(process.env.PORT || 2567);
+const port = env.port;
 
 const gameServer = new Server({
   transport: new WebSocketTransport(),

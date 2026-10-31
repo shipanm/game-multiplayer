@@ -132,6 +132,18 @@ export function getDashboardHtml() {
     </section>
   </main>
   <script>
+    let adminKey = sessionStorage.getItem("adminKey") || prompt("Dashboard admin key") || "";
+    sessionStorage.setItem("adminKey", adminKey);
+    const plainFetch = window.fetch.bind(window);
+    window.fetch = async (url, options = {}) => {
+      const headers = Object.assign({}, options.headers, { Authorization: "Bearer " + adminKey });
+      const response = await plainFetch(url, Object.assign({}, options, { headers }));
+      if (response.status === 401) {
+        sessionStorage.removeItem("adminKey");
+        location.reload();
+      }
+      return response;
+    };
     const dot = document.getElementById("dot");
     const statusText = document.getElementById("statusText");
     const analyticsPanel = document.getElementById("analyticsPanel");
@@ -435,7 +447,8 @@ export function getDashboardHtml() {
       )).join(""));
     }
 
-    const events = new EventSource("/events");
+    // EventSource cannot send headers, so /events takes the key as a query param.
+    const events = new EventSource("/events?key=" + encodeURIComponent(adminKey));
     events.onopen = () => {
       dot.classList.add("connected");
       statusText.textContent = "Live";

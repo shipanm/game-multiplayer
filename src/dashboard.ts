@@ -1,4 +1,5 @@
 import express from "express";
+import { adminAuth } from "./dashboard/adminAuth";
 import { getDashboardHtml } from "./dashboardHtml";
 import { getActiveRooms, getRoomByCode, getRoomSnapshot, getRoomStats, normalizeRoomCode } from "./roomMatchmakingRegistry";
 import { getServerLogs, recordServerLog, subscribeServerLogs } from "./serverLog";
@@ -36,15 +37,17 @@ export function setupDashboard(app: express.Application) {
     response.status(204).send();
   });
 
+  // The page is open (a browser cannot send a header on navigation); it holds no data and
+  // prompts for the key that every data route below requires.
   app.get("/", (_request, response) => {
     response.type("html").send(getDashboardHtml());
   });
 
-  app.get("/stats", (_request, response) => {
+  app.get("/stats", adminAuth, (_request, response) => {
     response.json(getRoomStats());
   });
 
-  app.get("/rooms", (_request, response) => {
+  app.get("/rooms", adminAuth, (_request, response) => {
     response.json(getActiveRooms());
   });
 
@@ -93,7 +96,7 @@ export function setupDashboard(app: express.Application) {
     });
   });
 
-  app.get("/config/timing", (_request, response) => {
+  app.get("/config/timing", adminAuth, (_request, response) => {
     response.json({
       config: getTimingConfig(),
       defaults: getDefaultTimingConfig(),
@@ -101,7 +104,7 @@ export function setupDashboard(app: express.Application) {
     });
   });
 
-  app.post("/config/timing", (request, response) => {
+  app.post("/config/timing", adminAuth, (request, response) => {
     const config = request.body != null && request.body.reset === true
       ? resetTimingConfig()
       : updateTimingConfig(request.body);
@@ -118,7 +121,7 @@ export function setupDashboard(app: express.Application) {
     });
   });
 
-  app.get("/config/dice-ai", (_request, response) => {
+  app.get("/config/dice-ai", adminAuth, (_request, response) => {
     response.json({
       config: getDiceAiConfig(),
       defaults: getDefaultDiceAiConfig(),
@@ -126,7 +129,7 @@ export function setupDashboard(app: express.Application) {
     });
   });
 
-  app.post("/config/dice-ai", (request, response) => {
+  app.post("/config/dice-ai", adminAuth, (request, response) => {
     const config = request.body != null && request.body.reset === true
       ? resetDiceAiConfig()
       : updateDiceAiConfig(request.body);
@@ -143,7 +146,7 @@ export function setupDashboard(app: express.Application) {
     });
   });
 
-  app.get("/rooms/:roomCode/state", (request, response) => {
+  app.get("/rooms/:roomCode/state", adminAuth, (request, response) => {
     const snapshot = getRoomSnapshot(request.params.roomCode);
     if (snapshot == null) {
       response.status(404).json({ error: "Room not found" });
@@ -153,16 +156,16 @@ export function setupDashboard(app: express.Application) {
     response.json(snapshot);
   });
 
-  app.get("/rooms/:roomCode/logs", (request, response) => {
+  app.get("/rooms/:roomCode/logs", adminAuth, (request, response) => {
     const roomCode = normalizeRoomCode(request.params.roomCode);
     response.json(getServerLogs().filter((entry) => getLogRoomCode(entry.details) === roomCode));
   });
 
-  app.get("/logs", (_request, response) => {
+  app.get("/logs", adminAuth, (_request, response) => {
     response.json(getServerLogs());
   });
 
-  app.get("/events", (request, response) => {
+  app.get("/events", adminAuth, (request, response) => {
     response.writeHead(200, {
       "Cache-Control": "no-cache",
       "Connection": "keep-alive",

@@ -1,5 +1,6 @@
 import express from "express";
-import { adminAuth } from "./dashboard/adminAuth";
+import { env } from "./config/env";
+import { createAdminAuth } from "./dashboard/adminAuth";
 import { getDashboardHtml } from "./dashboardHtml";
 import { getActiveRooms, getRoomByCode, getRoomSnapshot, getRoomStats, normalizeRoomCode } from "./roomMatchmakingRegistry";
 import { getServerLogs, recordServerLog, subscribeServerLogs } from "./serverLog";
@@ -31,6 +32,7 @@ interface DashboardSnapshot {
 }
 
 export function setupDashboard(app: express.Application) {
+  const adminAuth = createAdminAuth(env.dashboardAdminKey);
   app.use(express.json({ limit: "20kb" }));
 
   app.get("/favicon.ico", (_request, response) => {

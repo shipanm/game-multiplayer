@@ -25,6 +25,10 @@ realtime friend / room-code Ludo matches. Design docs:
 - **The server is the authority.** Client messages are intent; dice, move legality, turn order and
   the winner are decided here. Never accept a client-sent result or `playerId`.
 - **Keep game rules pure** (`ludoRules`, `ludoDiceAi`, `ludoBotAi`, …) so the smoke script covers them.
+- **SOLID for all new code.** One responsibility per file; pass dependencies in (factory args,
+  e.g. `createAdminAuth(key)`) instead of importing `env` or global state inside helpers; small
+  interfaces and pure functions over base classes. Don't refactor working code (e.g. `LudoRoom.ts`)
+  without a plan phase for it.
 - **Every env key** goes into `.env.example` with a placeholder — never a real secret.
 - Never start the server yourself (`npm run dev` / `npm start`) — ask the user.
   `npm run build` and `tsc` are fine.
